@@ -1,8 +1,11 @@
 import pandas as pd
 import xlsxwriter
 import numpy as np
+import tkinter as tk
+from tkinter import filedialog
+import os
 
-DEBUG = True
+DEBUG = False
 DEBUG_inputprint = True
 
 def count_common_elements(list1, list2):
@@ -113,7 +116,19 @@ def optimize_teams_order(teams):
     return [teams[i] for i in best_order], ignored_constraints, dp[final_mask][1]
 
 
-def read_teams_from_xlsx(file_path):
+def read_teams_from_xlsx():
+    root = tk.Tk()
+    root.withdraw()  # GUIのメインウィンドウを非表示にします
+    file_path = filedialog.askopenfilename(
+        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+        title="Select Excel File"
+    )
+
+    # ユーザーがキャンセルした場合、読み込みを中止
+    if not file_path:
+        print("File open operation cancelled.")
+        return None
+
     xls = pd.ExcelFile(file_path)
     teams = []
 
@@ -168,8 +183,24 @@ def read_teams_from_xlsx(file_path):
 
     return teams
 
-def export_to_xlsx(optimized_teams, ignored_constraints, file_name="optimized_schedule.xlsx"):
-    with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
+
+def export_to_xlsx(optimized_teams, ignored_constraints, default_file_name="optimized_schedule.xlsx"):
+    # GUIで保存先ディレクトリを選択
+    root = tk.Tk()
+    root.withdraw()  # GUIのメインウィンドウを非表示にします
+    save_path = filedialog.asksaveasfilename(
+        defaultextension=".xlsx",
+        filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
+        initialfile=default_file_name,
+        title="Save Optimized Schedule"
+    )
+
+    # ユーザーがキャンセルした場合、保存しない
+    if not save_path:
+        print("Save operation cancelled.")
+        return
+
+    with pd.ExcelWriter(save_path, engine='xlsxwriter') as writer:
         df_main = pd.DataFrame(columns=['Timestamp', 'Team'])
         total_seconds = 0
 
@@ -203,8 +234,10 @@ def remove_backslashes_and_trailing_spaces(input_string):
 
 # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
 if not DEBUG:
-    file_path = input("filename?")
-    teams = read_teams_from_xlsx(remove_backslashes_and_trailing_spaces(file_path))
+    teams = read_teams_from_xlsx()
+    if teams is None:
+        print("No file selected, terminating.")
+        exit()
 else:
     teams = [
         ["Break", 2, 3, -1, 3.0, 2.5, ["John", "Mike", "Akira", "Alex","An","George"]],
