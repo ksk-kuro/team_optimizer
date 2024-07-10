@@ -1,0 +1,224 @@
+import pandas as pd
+import xlsxwriter
+import numpy as np
+
+DEBUG = True
+DEBUG_inputprint = True
+
+def count_common_elements(list1, list2):
+    return len(set(list1) & set(list2))
+
+def calculate_R(teams):
+    R = []
+    for i in range(len(teams) - 1):
+        R.append(count_common_elements(teams[i][6], teams[i+1][6]))
+    return R
+
+def sum_R(R):
+    return sum(R)
+
+def convert_time_to_seconds(time):
+    if time is None:
+        return 0
+    minutes = int(time)
+    seconds = (time - minutes) * 100
+    return int(minutes * 60 + seconds)
+
+def format_timestamp(seconds):
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    seconds = seconds % 60
+    return f"{hours}:{minutes:02d}:{seconds:02d}"
+
+def check_constraints(order, teams):
+    total_seconds = 0
+    ignored_count = 0
+    ignored_constraints = []
+    for index, team_index in enumerate(order):
+        start, end, starttime, endtime = teams[team_index][1:5]
+        
+        if isinstance(starttime, complex):
+            start_seconds = convert_time_to_seconds(starttime.imag)
+            if total_seconds < start_seconds:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority starttime constraint was ignored")
+        elif starttime is not None and starttime != -1:
+            start_seconds = convert_time_to_seconds(starttime)
+            if total_seconds < start_seconds:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s starttime constraint was ignored")
+        
+        if isinstance(start, complex):
+            if index + 1 < int(start.imag):
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority start constraint was ignored")
+        elif start is not None and start != -1:
+            if index + 1 < start:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s start constraint was ignored")
+        
+        if isinstance(endtime, complex):
+            end_seconds = convert_time_to_seconds(endtime.imag)
+            if total_seconds > end_seconds:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority endtime constraint was ignored")
+        elif endtime is not None and endtime != -1:
+            end_seconds = convert_time_to_seconds(endtime)
+            if total_seconds > end_seconds:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s endtime constraint was ignored")
+        
+        if isinstance(end, complex):
+            if index + 1 > int(end.imag):
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority end constraint was ignored")
+        elif end is not None and end != -1:
+            if index + 1 > end:
+                ignored_count += 1
+                ignored_constraints.append(f"Team {teams[team_index][0]}'s end constraint was ignored")
+        
+        total_seconds += convert_time_to_seconds(teams[team_index][5])
+    
+    return ignored_count, ignored_constraints
+
+def optimize_teams_order(teams):
+    n = len(teams)
+    dp = [(None, float('inf'), float('inf'), float('inf'))] * (1 << n)
+    dp[0] = ([], 0, 0, 0)
+    constraints_ignored = {i: [] for i in range(1 << n)}
+
+    for mask in range(1 << n):
+        for i in range(n):
+            if not (mask & (1 << i)):
+                new_mask = mask | (1 << i)
+                for j in range(len(dp[mask][0]) + 1):
+                    new_order = dp[mask][0][:j] + [i] + dp[mask][0][j:]
+                    new_R = calculate_R([teams[k] for k in new_order])
+                    new_sum_R = sum_R(new_R)
+                    ignored_count, ignored_constraints = check_constraints(new_order, teams)
+                    high_priority_ignored = sum(1 for c in ignored_constraints if "high priority" in c)
+                    
+                    if (high_priority_ignored < dp[new_mask][3]) or (
+                        high_priority_ignored == dp[new_mask][3] and 
+                        (ignored_count < dp[new_mask][2]) or 
+                        (ignored_count == dp[new_mask][2] and new_sum_R < dp[new_mask][1])
+                    ):
+                        dp[new_mask] = (new_order, new_sum_R, ignored_count, high_priority_ignored)
+                        constraints_ignored[new_mask] = ignored_constraints.copy()
+    
+    final_mask = (1 << n) - 1
+    best_order = dp[final_mask][0]
+    ignored_constraints = constraints_ignored[final_mask]
+    
+    return [teams[i] for i in best_order], ignored_constraints, dp[final_mask][1]
+
+
+def read_teams_from_xlsx(file_path):
+    xls = pd.ExcelFile(file_path)
+    teams = []
+
+    for sheet_name in xls.sheet_names:
+        df = pd.read_excel(xls, sheet_name=sheet_name)
+        team_name = df.iloc[0, 0]
+        start = df.iloc[0, 2]
+        end = df.iloc[0, 3]
+        starttime = df.iloc[0, 4]
+        endtime = df.iloc[0, 5]
+        time = df.iloc[0, 1]
+        names = df.iloc[3:, 0].dropna().tolist()
+
+        try:
+            if isinstance(start, str) and 'j' in start:
+                start = complex(start)
+            else:
+                start = int(start)
+        except ValueError:
+            start = None
+
+        try:
+            if isinstance(end, str) and 'j' in end:
+                end = complex(end)
+            else:
+                end = int(end)
+        except ValueError:
+            end = None
+
+        try:
+            if isinstance(starttime, str) and 'j' in starttime:
+                starttime = complex(starttime)
+            else:
+                starttime = float(starttime)
+        except ValueError:
+            starttime = None
+
+        try:
+            if isinstance(endtime, str) and 'j' in endtime:
+                endtime = complex(endtime)
+            else:
+                endtime = float(endtime)
+        except ValueError:
+            endtime = None
+
+        try:
+            time = float(time)
+        except ValueError:
+            time = None
+
+        teams.append([team_name, start, end, starttime, endtime, time, names])
+
+    return teams
+
+def export_to_xlsx(optimized_teams, ignored_constraints, file_name="optimized_schedule.xlsx"):
+    with pd.ExcelWriter(file_name, engine='xlsxwriter') as writer:
+        df_main = pd.DataFrame(columns=['Timestamp', 'Team'])
+        total_seconds = 0
+
+        for team in optimized_teams:
+            timestamp = format_timestamp(total_seconds)
+            df_main = pd.concat([df_main, pd.DataFrame([[timestamp, team[0]]], columns=['Timestamp', 'Team'])])
+            total_seconds += convert_time_to_seconds(team[5])
+        
+        df_main.to_excel(writer, sheet_name='Main', index=False)
+
+        for i in range(len(optimized_teams) - 1):
+            common_members = set(optimized_teams[i][6]).intersection(set(optimized_teams[i + 1][6]))
+            df_transition = pd.DataFrame(list(common_members), columns=['Common Members'])
+            df_transition.to_excel(writer, sheet_name=f'Transition {i + 1}', index=False)
+        
+        # Summary sheet with ignored constraints content
+        df_summary = pd.DataFrame(columns=['Ignored Constraints'])
+        df_summary.loc[0] = [f"Ignored Constraints Count: {len(ignored_constraints)}"]
+        df_summary.loc[1] = [f"Total R Value: {calculate_R(optimized_teams)}"]
+
+        for i, constraint in enumerate(ignored_constraints):
+            df_summary.loc[i + 2] = [constraint]
+        df_summary.to_excel(writer, sheet_name='Summary', index=False)
+
+def remove_backslashes_and_trailing_spaces(input_string):
+    # Remove backslashes
+    cleaned_string = input_string.replace("\\", "")
+    # Remove only trailing spaces
+    cleaned_string = cleaned_string.rstrip()
+    return cleaned_string
+
+# ファイルを読み込み、チームを最適化し、結果をエクスポートする例
+if not DEBUG:
+    file_path = input("filename?")
+    teams = read_teams_from_xlsx(remove_backslashes_and_trailing_spaces(file_path))
+else:
+    teams = [
+        ["Break", 2, 3, -1, 3.0, 2.5, ["John", "Mike", "Akira", "Alex","An","George"]],
+        ["Alpha", 1, 4, 1.0, -1, 1.3, ["Alex", "Mike", "Fumi", "Sam", "Ren","Bob"]],
+        ["Beta", 1, 2, -1, 2.5, 0.7, ["Fumi", "Ren", "John", "Tom"]],
+        ["Gamma", 3, 4, 2.0, -1, 1.2, ["Tom", "Mike", "Sara", "Fumi","Ken"]],
+        ["Delta", -1, -1, -1, -1, 2.0, ["Sara", "Mike", "Nina", "Paul"]],
+        ["Epsilon", 5, -1, 3.0, 10.5, 3.0, ["Paul", "Nina", "Akira", "John","Bob"]],
+        ["Zeta", -1, 6, -1, 4.5, 1.5, ["Nina", "Alex", "John", "Sara"]],
+        ["Eta", 4, 7, 4.5, -1, 2.1, ["Tom", "Fumi", "Paul", "Alex"]],
+        ["Theta", 6, 9, -1, 8.0j, 1.9, ["Mike", "Sam", "John", "Nina","Bob"]],
+        ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
+    ]
+if DEBUG_inputprint:print(teams)
+optimized_teams, ignored_constraints, _ = optimize_teams_order(teams)
+
+export_to_xlsx(optimized_teams, ignored_constraints, 'optimized_schedule.xlsx')
