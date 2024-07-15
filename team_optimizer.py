@@ -117,7 +117,14 @@ def optimize_teams_order(teams):
     return [teams[i] for i in best_order], ignored_constraints, dp[final_mask][1]
 
 def gen_converter(gen):
-    return jaconv.z2h(gen, kana=False, ascii=False, digit=True).rstrip()
+    if isinstance(gen,int):
+        return str(gen).rstrip()
+    elif not gen:
+        return str(gen).rstrip()
+    elif isinstance(gen,str):
+        return jaconv.z2h(gen, kana=False, ascii=False, digit=True).rstrip()
+    else :
+        return str(gen).rstrip()
 
 def genre_converter(s):
     if not s:
@@ -134,7 +141,7 @@ def name_converter(text):
     return jaconv.h2z(text, kana=True, ascii=False, digit=False).rstrip()
 
 def name_format(gen,genre,familyname,firstname):
-    return gen_converter(gen)+' '+genre_converter(genre)+' '+name_converter(familyname)+' '+name_converter(firstname)
+    return gen+' '+genre+' '+familyname+' '+firstname
 
 def read_teams_from_xlsx():
     root = tk.Tk()
@@ -160,7 +167,18 @@ def read_teams_from_xlsx():
         starttime = df.iloc[0, 4]
         endtime = df.iloc[0, 5]
         time = df.iloc[0, 1]
-        names = df.iloc[3:, 0].dropna().tolist()
+
+        gen = df.iloc[3:, 0].dropna().tolist()
+        genre = df.iloc[3:, 1].dropna().tolist()
+        familyname = df.iloc[3:, 2].dropna().tolist()
+        firstname = df.iloc[3:, 3].dropna().tolist()
+        names = []
+        for i in range(len(gen)):
+            gen_converted = gen_converter(gen[i])
+            genre_converted = genre_converter(genre[i])
+            familyname_converted = name_converter(familyname[i])
+            firstname_converted = name_converter(firstname[i])
+            names.append(name_format(gen_converted,genre_converted,familyname_converted,firstname_converted))
 
         try:
             if isinstance(start, str) and 'j' in start:
