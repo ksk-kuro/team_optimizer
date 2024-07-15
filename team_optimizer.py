@@ -4,6 +4,7 @@ import numpy as np
 import tkinter as tk
 from tkinter import filedialog
 import os
+import jaconv
 
 DEBUG = False
 DEBUG_inputprint = True
@@ -115,6 +116,25 @@ def optimize_teams_order(teams):
     
     return [teams[i] for i in best_order], ignored_constraints, dp[final_mask][1]
 
+def gen_converter(gen):
+    return jaconv.z2h(gen, kana=False, ascii=False, digit=True).rstrip()
+
+def genre_converter(s):
+    if not s:
+        return s.rstrip()  # 空文字列の場合はそのまま返す
+    
+    # 先頭の文字を大文字に変換
+    first_char = s[0].upper()
+    # 残りの文字を小文字に変換
+    rest = s[1:].rstrip().lower()
+    
+    return first_char + rest
+
+def name_converter(text):
+    return jaconv.h2z(text, kana=True, ascii=False, digit=False).rstrip()
+
+def name_format(gen,genre,familyname,firstname):
+    return gen_converter(gen)+' '+genre_converter(genre)+' '+name_converter(familyname)+' '+name_converter(firstname)
 
 def read_teams_from_xlsx():
     root = tk.Tk()
@@ -182,6 +202,7 @@ def read_teams_from_xlsx():
         teams.append([team_name, start, end, starttime, endtime, time, names])
 
     return teams
+
 
 
 def export_to_xlsx(optimized_teams, ignored_constraints, default_file_name="optimized_schedule.xlsx"):
