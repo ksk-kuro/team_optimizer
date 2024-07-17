@@ -1,7 +1,4 @@
- GUIから開始時刻を受け取る
  GUIから終了時刻を受け取っても逆算して計算できるようにする
- 
- (↑check_constraintsとexport_to_xlsx関数だけ変更すればよさそう)
 
  GUIから転換時間を受け取る
 
