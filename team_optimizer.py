@@ -6,6 +6,7 @@ from tkinter import filedialog
 import os
 import jaconv
 import re
+import time_getter_gui as gui
 
 DEBUG = False
 DEBUG_inputprint = True
@@ -245,7 +246,7 @@ def read_teams_from_xlsx():
 
 
 
-def export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime, default_file_name="optimized_schedule.xlsx"):
+def export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime=0, default_file_name="optimized_schedule.xlsx"):
     # GUIで保存先ディレクトリを選択
     root = tk.Tk()
     root.withdraw()  # GUIのメインウィンドウを非表示にします
@@ -293,7 +294,8 @@ def remove_backslashes_and_trailing_spaces(input_string):
     cleaned_string = cleaned_string.rstrip()
     return cleaned_string
 
-showcase_starttime_ex = 3671
+showcase_starttime_ex = gui.get_time_from_gui()
+if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
 
 # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
 if not DEBUG:
