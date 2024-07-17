@@ -66,7 +66,7 @@ def check_constraints(order, teams):
             if total_seconds < start_seconds:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority starttime constraint was ignored")
-        elif starttime is not None and starttime != -1:
+        elif starttime is not None and not np.isnan(starttime):
             start_seconds = convert_time_to_seconds(starttime)
             if total_seconds < start_seconds:
                 ignored_count += 1
@@ -76,7 +76,7 @@ def check_constraints(order, teams):
             if index + 1 < int(start.imag):
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority start constraint was ignored")
-        elif start is not None and start != -1:
+        elif start is not None and not np.isnan(start):
             if index + 1 < start:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s start constraint was ignored")
@@ -86,7 +86,7 @@ def check_constraints(order, teams):
             if total_seconds > end_seconds:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority endtime constraint was ignored")
-        elif endtime is not None and endtime != -1:
+        elif endtime is not None and not np.isnan(endtime):
             end_seconds = convert_time_to_seconds(endtime)
             if total_seconds > end_seconds:
                 ignored_count += 1
@@ -96,7 +96,7 @@ def check_constraints(order, teams):
             if index + 1 > int(end.imag):
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority end constraint was ignored")
-        elif end is not None and end != -1:
+        elif end is not None and not np.isnan(end):
             if index + 1 > end:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s end constraint was ignored")
@@ -104,6 +104,7 @@ def check_constraints(order, teams):
         total_seconds += convert_time_to_seconds(teams[team_index][5])
     
     return ignored_count, ignored_constraints
+
 
 def optimize_teams_order(teams):
     n = len(teams)
@@ -135,6 +136,7 @@ def optimize_teams_order(teams):
     ignored_constraints = constraints_ignored[final_mask]
     
     return [teams[i] for i in best_order], ignored_constraints, dp[final_mask][1]
+
 
 def gen_converter(gen):
     if isinstance(gen,int):
