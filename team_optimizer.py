@@ -54,8 +54,8 @@ def format_timestamp(seconds):
     seconds = seconds % 60
     return f"{hours}:{minutes:02d}:{seconds:02d}"
 
-def check_constraints(order, teams):
-    total_seconds = 0
+def check_constraints(order, teams , showcase_starttime):
+    total_seconds = showcase_starttime
     ignored_count = 0
     ignored_constraints = []
     for index, team_index in enumerate(order):
@@ -106,7 +106,7 @@ def check_constraints(order, teams):
     return ignored_count, ignored_constraints
 
 
-def optimize_teams_order(teams):
+def optimize_teams_order(teams,showcase_starttime):
     n = len(teams)
     dp = [(None, float('inf'), float('inf'), float('inf'))] * (1 << n)
     dp[0] = ([], 0, 0, 0)
@@ -120,7 +120,7 @@ def optimize_teams_order(teams):
                     new_order = dp[mask][0][:j] + [i] + dp[mask][0][j:]
                     new_R = calculate_R([teams[k] for k in new_order])
                     new_sum_R = sum_R(new_R)
-                    ignored_count, ignored_constraints = check_constraints(new_order, teams)
+                    ignored_count, ignored_constraints = check_constraints(new_order, teams,showcase_starttime)
                     high_priority_ignored = sum(1 for c in ignored_constraints if "high priority" in c)
                     
                     if (high_priority_ignored < dp[new_mask][3]) or (
@@ -245,7 +245,7 @@ def read_teams_from_xlsx():
 
 
 
-def export_to_xlsx(optimized_teams, ignored_constraints, default_file_name="optimized_schedule.xlsx"):
+def export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime, default_file_name="optimized_schedule.xlsx"):
     # GUIで保存先ディレクトリを選択
     root = tk.Tk()
     root.withdraw()  # GUIのメインウィンドウを非表示にします
@@ -263,7 +263,7 @@ def export_to_xlsx(optimized_teams, ignored_constraints, default_file_name="opti
 
     with pd.ExcelWriter(save_path, engine='xlsxwriter') as writer:
         df_main = pd.DataFrame(columns=['Timestamp', 'Team'])
-        total_seconds = 0
+        total_seconds = showcase_starttime
 
         for team in optimized_teams:
             timestamp = format_timestamp(total_seconds)
@@ -293,6 +293,8 @@ def remove_backslashes_and_trailing_spaces(input_string):
     cleaned_string = cleaned_string.rstrip()
     return cleaned_string
 
+showcase_starttime_ex = 3671
+
 # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
 if not DEBUG:
     teams = read_teams_from_xlsx()
@@ -313,6 +315,6 @@ else:
         ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
     ]
 if DEBUG_inputprint:print(teams)
-optimized_teams, ignored_constraints, _ = optimize_teams_order(teams)
+optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex)
 
-export_to_xlsx(optimized_teams, ignored_constraints, 'optimized_schedule.xlsx')
+export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime_ex, 'optimized_schedule.xlsx')
