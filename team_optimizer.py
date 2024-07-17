@@ -5,6 +5,7 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 import jaconv
+import re
 
 DEBUG = False
 DEBUG_inputprint = True
@@ -27,6 +28,25 @@ def convert_time_to_seconds(time):
     minutes = int(time)
     seconds = (time - minutes) * 100
     return int(minutes * 60 + seconds)
+
+def str_to_timestr(input,option):
+    string = str(input)
+    time_list = re.split('[:：]',string)
+    if option == 'startendtime':
+        if len(time_list) == 2:
+            return time_list[0].strip() + '.' + time_list[1].strip()
+        elif len(time_list) == 3:
+            return str(int(time_list[0])*60+int(time_list[1])).strip() + '.' + time_list[2].strip()
+        else :
+            return string
+    elif option =='time':
+        if len(time_list) == 1:
+            return string
+        else:
+            if int(time_list[0]) != 0:
+                return str(time_list[0]).strip() + '.' + time_list[1].strip()
+            elif int(time_list[0]) == 0 and len(time_list) == 3:
+                return str(time_list[1]).strip() + '.' + time_list[2].strip()
 
 def format_timestamp(seconds):
     hours = seconds // 3600
@@ -164,9 +184,9 @@ def read_teams_from_xlsx():
         team_name = df.iloc[0, 0]
         start = df.iloc[0, 2]
         end = df.iloc[0, 3]
-        starttime = df.iloc[0, 4]
-        endtime = df.iloc[0, 5]
-        time = df.iloc[0, 1]
+        starttime = str_to_timestr(df.iloc[0, 4],'startendtime')
+        endtime = str_to_timestr(df.iloc[0, 5],'startendtime')
+        time = str_to_timestr(df.iloc[0, 1],'time')
 
         gen = df.iloc[3:, 0].dropna().tolist()
         genre = df.iloc[3:, 1].dropna().tolist()
