@@ -294,29 +294,32 @@ def remove_backslashes_and_trailing_spaces(input_string):
     cleaned_string = cleaned_string.rstrip()
     return cleaned_string
 
-showcase_starttime_ex = gui.get_time_from_gui()
-if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
 
-# ファイルを読み込み、チームを最適化し、結果をエクスポートする例
-if not DEBUG:
-    teams = read_teams_from_xlsx()
-    if teams is None:
-        print("No file selected, terminating.")
-        exit()
-else:
-    teams = [
-        ["Break", 2, 3, -1, 3.0, 2.5, ["John", "Mike", "Akira", "Alex","An","George"]],
-        ["Alpha", 1, 4, 1.0, -1, 1.3, ["Alex", "Mike", "Fumi", "Sam", "Ren","Bob"]],
-        ["Beta", 1, 2, -1, 2.5, 0.7, ["Fumi", "Ren", "John", "Tom"]],
-        ["Gamma", 3, 4, 2.0, -1, 1.2, ["Tom", "Mike", "Sara", "Fumi","Ken"]],
-        ["Delta", -1, -1, -1, -1, 2.0, ["Sara", "Mike", "Nina", "Paul"]],
-        ["Epsilon", 5, -1, 3.0, 10.5, 3.0, ["Paul", "Nina", "Akira", "John","Bob"]],
-        ["Zeta", -1, 6, -1, 4.5, 1.5, ["Nina", "Alex", "John", "Sara"]],
-        ["Eta", 4, 7, 4.5, -1, 2.1, ["Tom", "Fumi", "Paul", "Alex"]],
-        ["Theta", 6, 9, -1, 8.0j, 1.9, ["Mike", "Sam", "John", "Nina","Bob"]],
-        ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
-    ]
-if DEBUG_inputprint:print(teams)
-optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex)
+if __name__ == "__main__":
 
-export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime_ex, 'optimized_schedule.xlsx')
+    showcase_starttime_ex = gui.get_time_from_gui()
+    if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
+
+    # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
+    if not DEBUG:
+        teams = read_teams_from_xlsx()
+        if teams is None:
+            print("No file selected, terminating.")
+            exit()
+    else:
+        teams = [
+            ["Break", 2, 3, -1, 3.0, 2.5, ["John", "Mike", "Akira", "Alex","An","George"]],
+            ["Alpha", 1, 4, 1.0, -1, 1.3, ["Alex", "Mike", "Fumi", "Sam", "Ren","Bob"]],
+            ["Beta", 1, 2, -1, 2.5, 0.7, ["Fumi", "Ren", "John", "Tom"]],
+            ["Gamma", 3, 4, 2.0, -1, 1.2, ["Tom", "Mike", "Sara", "Fumi","Ken"]],
+            ["Delta", -1, -1, -1, -1, 2.0, ["Sara", "Mike", "Nina", "Paul"]],
+            ["Epsilon", 5, -1, 3.0, 10.5, 3.0, ["Paul", "Nina", "Akira", "John","Bob"]],
+            ["Zeta", -1, 6, -1, 4.5, 1.5, ["Nina", "Alex", "John", "Sara"]],
+            ["Eta", 4, 7, 4.5, -1, 2.1, ["Tom", "Fumi", "Paul", "Alex"]],
+            ["Theta", 6, 9, -1, 8.0j, 1.9, ["Mike", "Sam", "John", "Nina","Bob"]],
+            ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
+        ]
+    if DEBUG_inputprint:print(teams)
+    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex)
+
+    export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime_ex, 'optimized_schedule.xlsx')
