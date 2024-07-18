@@ -31,7 +31,8 @@ def convert_time_to_seconds(time):
     return int(minutes * 60 + seconds)
 
 def replace_hyphen(value, replace_at='-'):
-   """全ハイフンをマイナスに置換
+   """
+   全ハイフンをマイナスに置換
    :param value: 置換したい文字列
    :param replace_at: ハイフンの置換先の文字列
    :return: 置換した文字列
