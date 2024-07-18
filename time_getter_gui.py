@@ -23,33 +23,34 @@ def get_showcasestarttime_from_gui():
     base_root = tk.Tk()
     base_root.title("ショーケース開始時刻")
     base_root.geometry("800x150")
+    base_root.configure(bg = 'white')
 
     # ラベルと入力フィールドを作成
 
-    textframe = tk.Frame(base_root)
-    description_label = tk.Label(textframe,text = "開始時刻を２４時間表記で入力してください。",font=('MS Gothic',30))
+    textframe = tk.Frame(base_root,bg='white')
+    description_label = tk.Label(textframe,text = "開始時刻を２４時間表記で入力してください。",font=('MS Gothic',30),bg='white')
     description_label.pack()
     textframe.pack()
 
-    root = tk.Frame(base_root)
-    hour_label = tk.Label(root, text="時",font=('MS Gothic',30))
+    root = tk.Frame(base_root,bg='white')
+    hour_label = tk.Label(root, text="時",font=('MS Gothic',30),bg = 'white')
     hour_label.grid(row=1, column=1)
     hour_entry = tk.Entry(root,width=5,font=('MS Gothic',30))
     hour_entry.grid(row=1, column=0)
 
-    minute_label = tk.Label(root, text="分",font=('MS Gothic',30))
+    minute_label = tk.Label(root, text="分",font=('MS Gothic',30),bg='white')
     minute_label.grid(row=1, column=3)
     minute_entry = tk.Entry(root,width=5,font=('MS Gothic',30))
     minute_entry.grid(row=1, column=2)
 
-    second_label = tk.Label(root, text="秒",font=('MS Gothic',30))
+    second_label = tk.Label(root, text="秒",font=('MS Gothic',30),bg = 'white')
     second_label.grid(row=1, column=5)
     second_entry = tk.Entry(root,width=5,font=('MS Gothic',30))
     second_entry.grid(row=1, column=4)
     root.pack()
 
     # ボタンを作成
-    submit_button = tk.Button(root, text="Submit", command=submit_time,font=('MS Gothic',30))
+    submit_button = tk.Button(root, text="Submit", command=submit_time,font=('MS Gothic',30),bg = 'white')
     submit_button.grid(row=3, columnspan=10)
 
     # GUIを実行
@@ -79,29 +80,30 @@ def get_transitiontime_from_gui():
     base_root = tk.Tk()
     base_root.title("転換時間")
     base_root.geometry("800x150")
+    base_root.configure(bg = 'white')
 
     # ラベルと入力フィールドを作成
 
-    textframe = tk.Frame(base_root)
-    description_label = tk.Label(textframe,text = "転換時間を入力してください。",font=('MS Gothic',30))
+    textframe = tk.Frame(base_root,bg = 'white')
+    description_label = tk.Label(textframe,text = "転換時間を入力してください。",font=('MS Gothic',30),bg = 'white')
     description_label.pack()
     textframe.pack()
 
-    root = tk.Frame(base_root)
+    root = tk.Frame(base_root,bg = 'white')
 
-    minute_label = tk.Label(root, text="分",font=('MS Gothic',30))
+    minute_label = tk.Label(root, text="分",font=('MS Gothic',30),bg = 'white')
     minute_label.grid(row=1, column=1)
     minute_entry = tk.Entry(root,width=5,font=('MS Gothic',30))
     minute_entry.grid(row=1, column=0)
 
-    second_label = tk.Label(root, text="秒",font=('MS Gothic',30))
+    second_label = tk.Label(root, text="秒",font=('MS Gothic',30),bg = 'white')
     second_label.grid(row=1, column=3)
     second_entry = tk.Entry(root,width=5,font=('MS Gothic',30))
     second_entry.grid(row=1, column=2)
     root.pack()
 
     # ボタンを作成
-    submit_button = tk.Button(root, text="Submit", command=submit_time,font=('MS Gothic',30))
+    submit_button = tk.Button(root, text="Submit", command=submit_time,font=('MS Gothic',30),bg = 'white')
     submit_button.grid(row=3, columnspan=10)
 
     # GUIを実行
