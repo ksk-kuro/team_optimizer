@@ -45,6 +45,13 @@ def convert_startend_to_str_ifneeded(input):
         return replace_hyphen(string)
     else:
         return input
+    
+def calculate_total_performance_time(teams):
+    total_seconds = 0
+    for team in teams:
+        performance_time = team[5]
+        total_seconds += convert_time_to_seconds(performance_time)
+    return total_seconds
 
 def str_to_timestr(input,option):
     string = jaconv.z2h(str(input), kana=False, ascii=True, digit=True)
@@ -332,11 +339,17 @@ def remove_backslashes_and_trailing_spaces(input_string):
 
 if __name__ == "__main__":
 
-    showcase_starttime_ex = gui.get_showcasestarttime_from_gui()
-    if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
+    initialize_start = gui.initialize_gui()
 
-    transition_seconds_ex = gui.get_transitiontime_from_gui()
-    if DEBUG_inputprint:print("transition time:",transition_seconds_ex)
+    if initialize_start:
+        showcase_starttime = gui.get_showcasestarttime_from_gui()
+        if DEBUG_inputprint:print("showcase start:",showcase_starttime)
+    else:
+        showcase_endtime = gui.get_showcaseendtime_from_gui()
+        if DEBUG_inputprint:print("showcase start:",showcase_endtime)
+
+    transition_seconds = gui.get_transitiontime_from_gui()
+    if DEBUG_inputprint:print("transition time:",transition_seconds)
 
     # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
     if not DEBUG:
@@ -358,6 +371,11 @@ if __name__ == "__main__":
             ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
         ]
     if DEBUG_inputprint:print(teams)
-    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex,transition_seconds_ex)
 
-    export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds_ex,showcase_starttime_ex, 'optimized_schedule.xlsx')
+    if not initialize_start:
+        total_time = calculate_total_performance_time(teams)+len(teams)*transition_seconds
+        showcase_starttime = showcase_endtime - total_time
+
+    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime,transition_seconds)
+
+    export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime, 'optimized_schedule.xlsx')

@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-def create_button_gui():
+def initialize_gui():
     # ボタンが押されたときのコールバック関数
     def on_button_click(value):
         nonlocal result
