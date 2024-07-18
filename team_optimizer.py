@@ -303,10 +303,10 @@ def remove_backslashes_and_trailing_spaces(input_string):
 
 if __name__ == "__main__":
 
-    showcase_starttime_ex = gui.get_time_from_gui()
+    showcase_starttime_ex = gui.get_showcasestarttime_from_gui()
     if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
 
-    transition_seconds_ex = 150
+    transition_seconds_ex = gui.get_transitiontime_from_gui()
     if DEBUG_inputprint:print("transition time:",transition_seconds_ex)
 
     # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
