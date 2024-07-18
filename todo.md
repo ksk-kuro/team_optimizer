@@ -3,4 +3,6 @@
 出力ファイルのシートのタイトルを、Common membersから、チーム名 -> チーム名
 に変える。
 
+team optimizer sample data.xlsxの名前をいいかげん日本人にする。
+
 ちょっと関数が増えてきたので別のファイルにモジュール化しようかな、、→pyinstallerはちゃんと動く？
