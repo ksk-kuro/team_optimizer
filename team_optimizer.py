@@ -55,12 +55,12 @@ def format_timestamp(seconds):
     seconds = seconds % 60
     return f"{hours}:{minutes:02d}:{seconds:02d}"
 
-def check_constraints(order, teams , showcase_starttime):
+def check_constraints(order, teams , showcase_starttime,transition_seconds):
     total_seconds = showcase_starttime
     ignored_count = 0
     ignored_constraints = []
     for index, team_index in enumerate(order):
-        start, end, starttime, endtime = teams[team_index][1:5]
+        start, end, starttime, endtime,time = teams[team_index][1:6]
         
         if isinstance(starttime, complex):
             start_seconds = convert_time_to_seconds(starttime.imag)
@@ -84,12 +84,12 @@ def check_constraints(order, teams , showcase_starttime):
         
         if isinstance(endtime, complex):
             end_seconds = convert_time_to_seconds(endtime.imag)
-            if total_seconds > end_seconds:
+            if total_seconds + convert_time_to_seconds(time)> end_seconds:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority endtime constraint was ignored")
         elif endtime is not None and not np.isnan(endtime):
             end_seconds = convert_time_to_seconds(endtime)
-            if total_seconds > end_seconds:
+            if total_seconds + convert_time_to_seconds(time)> end_seconds:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s endtime constraint was ignored")
         
@@ -102,12 +102,13 @@ def check_constraints(order, teams , showcase_starttime):
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s end constraint was ignored")
         
-        total_seconds += convert_time_to_seconds(teams[team_index][5])
+        total_seconds += convert_time_to_seconds(teams[team_index][5]) #ここに転換時間をプラス
+        total_seconds += transition_seconds
     
     return ignored_count, ignored_constraints
 
 
-def optimize_teams_order(teams,showcase_starttime):
+def optimize_teams_order(teams,showcase_starttime,transition_seconds):
     n = len(teams)
     dp = [(None, float('inf'), float('inf'), float('inf'))] * (1 << n)
     dp[0] = ([], 0, 0, 0)
@@ -121,7 +122,7 @@ def optimize_teams_order(teams,showcase_starttime):
                     new_order = dp[mask][0][:j] + [i] + dp[mask][0][j:]
                     new_R = calculate_R([teams[k] for k in new_order])
                     new_sum_R = sum_R(new_R)
-                    ignored_count, ignored_constraints = check_constraints(new_order, teams,showcase_starttime)
+                    ignored_count, ignored_constraints = check_constraints(new_order, teams,showcase_starttime,transition_seconds)
                     high_priority_ignored = sum(1 for c in ignored_constraints if "high priority" in c)
                     
                     if (high_priority_ignored < dp[new_mask][3]) or (
@@ -246,7 +247,7 @@ def read_teams_from_xlsx():
 
 
 
-def export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime=0, default_file_name="optimized_schedule.xlsx"):
+def export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime=0, default_file_name="optimized_schedule.xlsx"):
     # GUIで保存先ディレクトリを選択
     root = tk.Tk()
     root.withdraw()  # GUIのメインウィンドウを非表示にします
@@ -263,13 +264,18 @@ def export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime=0, de
         return
 
     with pd.ExcelWriter(save_path, engine='xlsxwriter') as writer:
-        df_main = pd.DataFrame(columns=['Timestamp', 'Team'])
+        df_main = pd.DataFrame(columns=['Timestamp', 'Team' , 'showcase time','transition time'])
         total_seconds = showcase_starttime
 
         for team in optimized_teams:
             timestamp = format_timestamp(total_seconds)
-            df_main = pd.concat([df_main, pd.DataFrame([[timestamp, team[0]]], columns=['Timestamp', 'Team'])])
+            showcasetime = format_timestamp(convert_time_to_seconds(team[5]))
+            transition_seconds_formatted = format_timestamp(transition_seconds)
+            df_main = pd.concat([df_main, pd.DataFrame([[timestamp, team[0],showcasetime ,transition_seconds_formatted]], columns=['Timestamp', 'Team' , 'showcase time','transition time'])])
             total_seconds += convert_time_to_seconds(team[5])
+            total_seconds += transition_seconds
+        timestamp = format_timestamp(total_seconds)
+        df_main = pd.concat([df_main, pd.DataFrame([[timestamp]], columns=['Timestamp'])])
         
         df_main.to_excel(writer, sheet_name='Main', index=False)
 
@@ -300,6 +306,9 @@ if __name__ == "__main__":
     showcase_starttime_ex = gui.get_time_from_gui()
     if DEBUG_inputprint:print("showcase start:",showcase_starttime_ex)
 
+    transition_seconds_ex = 150
+    if DEBUG_inputprint:print("transition time:",transition_seconds_ex)
+
     # ファイルを読み込み、チームを最適化し、結果をエクスポートする例
     if not DEBUG:
         teams = read_teams_from_xlsx()
@@ -320,6 +329,6 @@ if __name__ == "__main__":
             ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
         ]
     if DEBUG_inputprint:print(teams)
-    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex)
+    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime_ex,transition_seconds_ex)
 
-    export_to_xlsx(optimized_teams, ignored_constraints,showcase_starttime_ex, 'optimized_schedule.xlsx')
+    export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds_ex,showcase_starttime_ex, 'optimized_schedule.xlsx')
