@@ -30,9 +30,24 @@ def convert_time_to_seconds(time):
     seconds = (time - minutes) * 100
     return int(minutes * 60 + seconds)
 
+def replace_hyphen(value, replace_at='-'):
+   """全ハイフンをマイナスに置換
+   :param value: 置換したい文字列
+   :param replace_at: ハイフンの置換先の文字列
+   :return: 置換した文字列
+   """
+   return re.sub('－|-|‐|−|‒|—|–|―|ｰ|─|━|ㅡ|ـ|⁻|₋', replace_at, value)
+
+def convert_startend_to_str_ifneeded(input):
+    if isinstance(input,str):
+        string = str(jaconv.z2h(input,kana=False,ascii=True,digit=True)).replace(' ','')
+        return replace_hyphen(string)
+    else:
+        return input
+
 def str_to_timestr(input,option):
-    string = str(input)
-    time_list = re.split('[:：]',string)
+    string = jaconv.z2h(str(input), kana=False, ascii=True, digit=True)
+    time_list = re.split('[:]',string)
     if option == 'startendtime':
         if len(time_list) == 2:
             return time_list[0].strip() + '.' + time_list[1].strip()
@@ -59,6 +74,8 @@ def check_constraints(order, teams , showcase_starttime,transition_seconds):
     total_seconds = showcase_starttime
     ignored_count = 0
     ignored_constraints = []
+    n_teams = len(teams)
+
     for index, team_index in enumerate(order):
         start, end, starttime, endtime,time = teams[team_index][1:6]
         
@@ -74,14 +91,20 @@ def check_constraints(order, teams , showcase_starttime,transition_seconds):
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s starttime constraint was ignored")
         
         if isinstance(start, complex):
-            if index + 1 < int(start.imag):
+            start_value = int(start.imag)
+            if start_value < 0:
+                start_value = n_teams + 1 + start_value
+            if index + 1 < start_value:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority start constraint was ignored")
         elif start is not None and not np.isnan(start):
+            if start < 0:
+                start = n_teams + 1 + start
             if index + 1 < start:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s start constraint was ignored")
-        
+
+
         if isinstance(endtime, complex):
             end_seconds = convert_time_to_seconds(endtime.imag)
             if total_seconds + convert_time_to_seconds(time)> end_seconds:
@@ -94,14 +117,19 @@ def check_constraints(order, teams , showcase_starttime,transition_seconds):
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s endtime constraint was ignored")
         
         if isinstance(end, complex):
-            if index + 1 > int(end.imag):
+            end_value = int(end.imag)
+            if end_value < 0:
+                end_value = n_teams + 1 + end_value
+            if index + 1 > end_value:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s high priority end constraint was ignored")
         elif end is not None and not np.isnan(end):
+            if end < 0:
+                end = n_teams + 1 + end
             if index + 1 > end:
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s end constraint was ignored")
-        
+    
         total_seconds += convert_time_to_seconds(teams[team_index][5]) #ここに転換時間をプラス
         total_seconds += transition_seconds
     
@@ -186,8 +214,8 @@ def read_teams_from_xlsx():
     for sheet_name in xls.sheet_names:
         df = pd.read_excel(xls, sheet_name=sheet_name)
         team_name = df.iloc[0, 0]
-        start = df.iloc[0, 2]
-        end = df.iloc[0, 3]
+        start = convert_startend_to_str_ifneeded(df.iloc[0, 2])
+        end = convert_startend_to_str_ifneeded(df.iloc[0, 3])
         starttime = str_to_timestr(df.iloc[0, 4],'startendtime')
         endtime = str_to_timestr(df.iloc[0, 5],'startendtime')
         time = str_to_timestr(df.iloc[0, 1],'time')
