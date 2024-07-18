@@ -5,4 +5,8 @@
 
 team optimizer sample data.xlsxの名前をいいかげん日本人にする。
 
+↑それが終わったら、チーム数とか増やしてgitにアップロード
+
+pyinstallerで作った実行ファイルをgitにアップロード
+
 ちょっと関数が増えてきたので別のファイルにモジュール化しようかな、、→pyinstallerはちゃんと動く？
