@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import webbrowser
 
 def initialize_gui():
     # ボタンが押されたときのコールバック関数
@@ -14,7 +15,7 @@ def initialize_gui():
     root = tk.Tk()
     root.title("")
     root.configure(bg="white")
-    root.geometry("800x220")
+    root.geometry("800x250")
 
     #textfield
     textfield = tk.Frame(root,bg = "white")
@@ -25,23 +26,33 @@ def initialize_gui():
     textfield.pack()
 
     # ボタンAを作成
-    button_a = tk.Button(root, text="開始時刻を指定して始める", command=lambda: on_button_click(True),bg="white")
+    button_a = tk.Button(root, text="開始時刻を指定して始める", command=lambda: on_button_click(True),bg="white",cursor="hand2")
     button_a.pack(pady=10)
 
     # ボタンBを作成
-    button_b = tk.Button(root, text="終了時刻を指定して始める", command=lambda: on_button_click(False),bg="white")
+    button_b = tk.Button(root, text="終了時刻を指定して始める", command=lambda: on_button_click(False),bg="white",cursor="hand2")
     button_b.pack(pady=10)
 
-    #自己顕示欲
+    #githubへのリンク
     textfield2 = tk.Frame(root,bg = "white")
-    textfield_name_label = tk.Label(textfield2,text = "developped by Kosuke,14th,sub head,break",font=('MS Gothic',15),bg='white')
+    textfield_name_label = tk.Label(textfield2,text = "説明書・サンプルファイル・最新版ダウンロードはこちら(GitHub)",font=('normal',15,"underline"),bg='white',fg="blue",cursor="hand2")
     textfield_name_label.pack()
+    textfield_name_label.bind("<Button-1>",lambda e:link_click("https://github.com/ksk-kuro/team_optimizer.git"))
     textfield2.pack()
+
+    #自己顕示欲
+    textfield3 = tk.Frame(root,bg = "white")
+    textfield_name_label2 = tk.Label(textfield3,text = "developped by Kosuke,14th,sub head,break",font=('MS Gothic',15),bg='white')
+    textfield_name_label2.pack()
+    textfield3.pack()
 
     # ウィンドウのメインループを開始
     root.mainloop()
 
     return result
+
+def link_click(url):
+        webbrowser.open_new(url)
 
 def get_showcasestarttime_from_gui():
     def submit_time():
