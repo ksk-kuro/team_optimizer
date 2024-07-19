@@ -9,7 +9,7 @@ import re
 import time_getter_gui as gui
 
 DEBUG = False
-DEBUG_inputprint = False
+DEBUG_inputprint = True
 
 def count_common_elements(list1, list2):
     return len(set(list1) & set(list2))
@@ -19,9 +19,6 @@ def calculate_R(teams):
     for i in range(len(teams) - 1):
         R.append(count_common_elements(teams[i][6], teams[i+1][6]))
     return R
-
-def sum_R(R):
-    return sum(R)
 
 def convert_time_to_seconds(time):
     if time is None:
@@ -138,7 +135,7 @@ def check_constraints(order, teams , showcase_starttime,transition_seconds):
                 ignored_count += 1
                 ignored_constraints.append(f"Team {teams[team_index][0]}'s end constraint was ignored")
     
-        total_seconds += convert_time_to_seconds(teams[team_index][5]) #ここに転換時間をプラス
+        total_seconds += convert_time_to_seconds(teams[team_index][5])
         total_seconds += transition_seconds
     
     return ignored_count, ignored_constraints
@@ -157,7 +154,7 @@ def optimize_teams_order(teams,showcase_starttime,transition_seconds):
                 for j in range(len(dp[mask][0]) + 1):
                     new_order = dp[mask][0][:j] + [i] + dp[mask][0][j:]
                     new_R = calculate_R([teams[k] for k in new_order])
-                    new_sum_R = sum_R(new_R)
+                    new_sum_R = sum(new_R)
                     ignored_count, ignored_constraints = check_constraints(new_order, teams,showcase_starttime,transition_seconds)
                     high_priority_ignored = sum(1 for c in ignored_constraints if "high priority" in c)
                     
@@ -182,7 +179,7 @@ def gen_converter(gen):
     elif not gen:
         return str(gen).rstrip()
     elif isinstance(gen,str):
-        return jaconv.z2h(gen, kana=False, ascii=False, digit=True).rstrip()
+        return jaconv.z2h(gen, kana=False, ascii=False, digit=True).replace(' ','')
     else :
         return str(gen).rstrip()
 
@@ -193,12 +190,12 @@ def genre_converter(s):
     # 先頭の文字を大文字に変換
     first_char = s[0].upper()
     # 残りの文字を小文字に変換
-    rest = s[1:].rstrip().lower()
+    rest = s[1:].lower()
     
     return first_char + rest
 
 def name_converter(text):
-    return jaconv.h2z(text, kana=True, ascii=False, digit=False).rstrip()
+    return jaconv.h2z(text, kana=True, ascii=False, digit=False).replace('　','')
 
 def name_format(gen,genre,familyname,firstname):
     return gen+' '+genre+' '+familyname+' '+firstname
@@ -241,7 +238,7 @@ def read_teams_from_xlsx():
             names.append(name_format(gen_converted,genre_converted,familyname_converted,firstname_converted))
 
         try:
-            if isinstance(start, str) and 'j' in start:
+            if isinstance(start, str) and ('j' in start or 'J' in start):
                 start = complex(start)
             else:
                 start = int(start)
@@ -249,7 +246,7 @@ def read_teams_from_xlsx():
             start = None
 
         try:
-            if isinstance(end, str) and 'j' in end:
+            if isinstance(end, str) and ('j' in end or 'J' in end):
                 end = complex(end)
             else:
                 end = int(end)
@@ -257,7 +254,7 @@ def read_teams_from_xlsx():
             end = None
 
         try:
-            if isinstance(starttime, str) and 'j' in starttime:
+            if isinstance(starttime, str) and ('j' in starttime or 'J' in starttime):
                 starttime = complex(starttime)
             else:
                 starttime = float(starttime)
@@ -265,7 +262,7 @@ def read_teams_from_xlsx():
             starttime = None
 
         try:
-            if isinstance(endtime, str) and 'j' in endtime:
+            if isinstance(endtime, str) and ('j' in endtime or 'J' in endtime):
                 endtime = complex(endtime)
             else:
                 endtime = float(endtime)

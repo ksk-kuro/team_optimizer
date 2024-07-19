@@ -214,7 +214,7 @@ def get_transitiontime_from_gui():
 
 if __name__ == "__main__":
     # 関数を呼び出して結果を取得
-    result = create_button_gui()
+    result = initialize_gui()
     print(result)
     #この関数を呼び出して時刻を取得
     time_values = get_showcasestarttime_from_gui()
