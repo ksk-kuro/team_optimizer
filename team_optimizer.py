@@ -9,7 +9,7 @@ import re
 import time_getter_gui as gui
 
 DEBUG = False
-DEBUG_inputprint = True
+DEBUG_inputprint = False
 
 def count_common_elements(list1, list2):
     return len(set(list1) & set(list2))
@@ -189,7 +189,7 @@ def gen_converter(gen):
 def genre_converter(s):
     if not s:
         return s.rstrip()  # 空文字列の場合はそのまま返す
-    
+    s = jaconv.z2h(s, kana=False, ascii=True, digit=False).replace(' ','')
     # 先頭の文字を大文字に変換
     first_char = s[0].upper()
     # 残りの文字を小文字に変換
@@ -317,13 +317,14 @@ def export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showc
 
         for i in range(len(optimized_teams) - 1):
             common_members = set(optimized_teams[i][6]).intersection(set(optimized_teams[i + 1][6]))
-            df_transition = pd.DataFrame(list(common_members), columns=['Common Members'])
+            common_members_sorted = sorted(common_members)
+            df_transition = pd.DataFrame(list(common_members_sorted), columns=[f'Common Members of {i+1}: {optimized_teams[i][0]} -> {i+2}: {optimized_teams[i+1][0]} '])
             df_transition.to_excel(writer, sheet_name=f'Transition {i + 1}', index=False)
         
         # Summary sheet with ignored constraints content
         df_summary = pd.DataFrame(columns=['Ignored Constraints'])
         df_summary.loc[0] = [f"Ignored Constraints Count: {len(ignored_constraints)}"]
-        df_summary.loc[1] = [f"Total R Value: {calculate_R(optimized_teams)}"]
+        df_summary.loc[1] = [f"Total R Value: {calculate_R(optimized_teams)}, {sum(calculate_R(optimized_teams))}"]
 
         for i, constraint in enumerate(ignored_constraints):
             df_summary.loc[i + 2] = [constraint]
@@ -370,11 +371,17 @@ if __name__ == "__main__":
             ["Theta", 6, 9, -1, 8.0j, 1.9, ["Mike", "Sam", "John", "Nina","Bob"]],
             ["Iota", 7j, 10, 7.0, 10.5, 2.6, ["Ren", "Tom", "Sara", "Mike","Ken"]]
         ]
-    if DEBUG_inputprint:print(teams)
 
     if not initialize_start:
         total_time = calculate_total_performance_time(teams)+len(teams)*transition_seconds
         showcase_starttime = showcase_endtime - total_time
+    
+    if DEBUG_inputprint:
+        print(teams)
+        print(f'initial total R value = {sum(calculate_R(teams))}')
+        initial_constraints_count,initial_constraints = check_constraints(list(range(len(teams))),teams,showcase_starttime,transition_seconds)
+        print(f'the number of initial ignored constraints : {initial_constraints_count}')
+        print(initial_constraints)
 
     optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime,transition_seconds)
 
