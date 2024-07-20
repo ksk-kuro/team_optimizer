@@ -335,6 +335,7 @@ def remove_backslashes_and_trailing_spaces(input_string):
     return cleaned_string
 
 
+
 if __name__ == "__main__":
 
     initialize_start = gui.initialize_gui()
