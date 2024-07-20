@@ -1,15 +1,13 @@
 import pandas as pd
-import xlsxwriter
 import numpy as np
 import tkinter as tk
 from tkinter import filedialog
-import os
 import jaconv
 import re
 import time_getter_gui as gui
 
 DEBUG = False
-DEBUG_inputprint = True
+DEBUG_inputprint = False
 
 def count_common_elements(list1, list2):
     return len(set(list1) & set(list2))
