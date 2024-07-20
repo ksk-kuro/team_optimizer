@@ -10,11 +10,11 @@
 
 README.md:この文書です。説明書です。
 
+Team_Sample_Data.xlsx:このアプリがちゃんと動くか確かめるための、架空のチーム情報をまとめたテストデータです。
+
+Team_Template.xlsx:チーム情報をまとめるxlsxのテンプレートです。これをチームの代表者に配ってください。
+
 team_optimizer.py/time_getter_gui.py:プログラムの本体(ソースコード)です。コード書かない人は無視して結構です。
-
-sample_team_data.xlsx:このアプリがちゃんと動くか確かめるための、架空のチーム情報をまとめたテストデータです。
-
-template.xlsx:チーム情報をまとめるxlsxのテンプレートです。これをチームの代表者に配ってください。
 
 ④おすすめは自分のpython環境でteam_optimizer.pyを実行することですが、何言ってんのか全然わかんない人は、無印の「team_optimizer」をダブルクリックしてください。
 
