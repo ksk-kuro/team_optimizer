@@ -7,7 +7,7 @@ import re
 import time_getter_gui as gui
 
 DEBUG = False
-DEBUG_inputprint = False
+DEBUG_inputprint = True
 
 def count_common_elements(list1, list2):
     return len(set(list1) & set(list2))
@@ -163,6 +163,7 @@ def optimize_teams_order(teams,showcase_starttime,transition_seconds):
                     ):
                         dp[new_mask] = (new_order, new_sum_R, ignored_count, high_priority_ignored)
                         constraints_ignored[new_mask] = ignored_constraints.copy()
+        print("\rprogress:",round(mask/(1 << n)*100,5),"%",end = '')
     
     final_mask = (1 << n) - 1
     best_order = dp[final_mask][0]
@@ -189,8 +190,10 @@ def genre_converter(s):
     first_char = s[0].upper()
     # 残りの文字を小文字に変換
     rest = s[1:].lower()
-    
-    return first_char + rest
+    result = first_char +rest
+    if result == "Hip":
+        result = "Hiphop"
+    return result
 
 def name_converter(text):
     return jaconv.h2z(text, kana=True, ascii=False, digit=False).replace('　','')
@@ -278,7 +281,7 @@ def read_teams_from_xlsx():
 
 
 
-def export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime=0, default_file_name="optimized_schedule.xlsx"):
+def export_to_xlsx(optimized_teams, ignored_constraints, transition_seconds, showcase_starttime=0, default_file_name="optimized_schedule.xlsx"):
     # GUIで保存先ディレクトリを選択
     root = tk.Tk()
     root.withdraw()  # GUIのメインウィンドウを非表示にします
@@ -295,27 +298,27 @@ def export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showc
         return
 
     with pd.ExcelWriter(save_path, engine='xlsxwriter') as writer:
-        df_main = pd.DataFrame(columns=['Timestamp', 'Team' , 'showcase time','transition time'])
+        df_main = pd.DataFrame(columns=['Timestamp', 'Team', 'showcase time', 'transition time'])
         total_seconds = showcase_starttime
 
         for team in optimized_teams:
             timestamp = format_timestamp(total_seconds)
             showcasetime = format_timestamp(convert_time_to_seconds(team[5]))
             transition_seconds_formatted = format_timestamp(transition_seconds)
-            df_main = pd.concat([df_main, pd.DataFrame([[timestamp, team[0],showcasetime ,transition_seconds_formatted]], columns=['Timestamp', 'Team' , 'showcase time','transition time'])])
+            df_main = pd.concat([df_main, pd.DataFrame([[timestamp, team[0], showcasetime, transition_seconds_formatted]], columns=['Timestamp', 'Team', 'showcase time', 'transition time'])])
             total_seconds += convert_time_to_seconds(team[5])
             total_seconds += transition_seconds
         timestamp = format_timestamp(total_seconds)
         df_main = pd.concat([df_main, pd.DataFrame([[timestamp]], columns=['Timestamp'])])
-        
+
         df_main.to_excel(writer, sheet_name='Main', index=False)
 
         for i in range(len(optimized_teams) - 1):
             common_members = set(optimized_teams[i][6]).intersection(set(optimized_teams[i + 1][6]))
             common_members_sorted = sorted(common_members)
-            df_transition = pd.DataFrame(list(common_members_sorted), columns=[f'Common Members of {i+1}: {optimized_teams[i][0]} -> {i+2}: {optimized_teams[i+1][0]} '])
+            df_transition = pd.DataFrame(list(common_members_sorted), columns=[f'Common Members of {i + 1}: {optimized_teams[i][0]} -> {i + 2}: {optimized_teams[i + 1][0]} '])
             df_transition.to_excel(writer, sheet_name=f'Transition {i + 1}', index=False)
-        
+
         # Summary sheet with ignored constraints content
         df_summary = pd.DataFrame(columns=['Ignored Constraints'])
         df_summary.loc[0] = [f"Ignored Constraints Count: {len(ignored_constraints)}"]
@@ -324,6 +327,25 @@ def export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showc
         for i, constraint in enumerate(ignored_constraints):
             df_summary.loc[i + 2] = [constraint]
         df_summary.to_excel(writer, sheet_name='Summary', index=False)
+
+        # 新しいシートの追加: names + チーム出席情報
+        all_names = sorted({name for team in optimized_teams for name in team[6]})  # 全メンバー名をソートして取得
+        df_names = pd.DataFrame(columns=['names'] + [team[0] for team in optimized_teams])  # 1列目: "names", 2列目以降: チーム名
+
+        # 各メンバーの所属チーム情報を埋める
+        for name in all_names:
+            row = [name]  # 1列目: メンバー名
+            count = 0  # ○の数を数えるためのカウンタ
+            for team in optimized_teams:
+                if name in team[6]:
+                    row.append('○')
+                    count += 1
+                else:
+                    row.append('')
+            row.append(count)  # 最後の列に○の数を追加
+            df_names = pd.concat([df_names, pd.DataFrame([row], columns=['names'] + [team[0] for team in optimized_teams] + ['count'])])
+
+        df_names.to_excel(writer, sheet_name='Names Participation', index=False)
 
 def remove_backslashes_and_trailing_spaces(input_string):
     # Remove backslashes
@@ -379,6 +401,17 @@ if __name__ == "__main__":
         print(f'the number of initial ignored constraints : {initial_constraints_count}')
         print(initial_constraints)
 
-    optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime,transition_seconds)
+    exportmethod = gui.exportmethod_gui()
+    print("valiable accepted")
 
-    export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime, 'optimized_schedule.xlsx')
+    if exportmethod:
+        print("optimization started")
+        optimized_teams, ignored_constraints, _ = optimize_teams_order(teams,showcase_starttime,transition_seconds)
+        print("optimization ended")
+        export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime, 'optimized_schedule.xlsx')
+    else:
+        print("export process started")
+        optimized_teams = teams
+        _ ,ignored_constraints = check_constraints(list(range(len(teams))),teams,showcase_starttime,transition_seconds)
+        print("export process ended")
+        export_to_xlsx(optimized_teams, ignored_constraints,transition_seconds,showcase_starttime, 'not_optimized_schedule.xlsx')
