@@ -51,6 +51,43 @@ def initialize_gui():
 
     return result
 
+
+def exportmethod_gui():
+    # ボタンが押されたときのコールバック関数
+    def on_button_click(value):
+        nonlocal result
+        result = value
+        print("Button clicked, closing window...")
+        root.quit()  # ウィンドウを閉じる
+
+    result = None
+    
+    # ウィンドウを作成
+    root = tk.Tk()
+    root.title("")
+    root.configure(bg="white")
+    root.geometry("600x150")
+
+    #textfield
+    textfield = tk.Frame(root,bg = "white")
+    textfield_BOILED_label = tk.Label(textfield,text = "最適化をしますか？",font=('MS Gothic',30),bg='white')
+    textfield_BOILED_label.pack()
+    textfield.pack()
+
+    # ボタンAを作成
+    button_a = tk.Button(root, text="最適化後の結果を表示", command=lambda: on_button_click(True),bg="white",cursor="hand2")
+    button_a.pack(pady=10)
+
+    # ボタンBを作成
+    button_b = tk.Button(root, text="最適化せずに結果を表示", command=lambda: on_button_click(False),bg="white",cursor="hand2")
+    button_b.pack(pady=10)
+
+    # ウィンドウのメインループを開始
+    root.mainloop()
+    
+    print("loop ended.")
+    return result
+
 def link_click(url):
         webbrowser.open_new(url)
 

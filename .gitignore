@@ -1,0 +1,10 @@
+.DS_Store
+.venv_for_pyinstaller/
+__pycache__/
+build.spec
+build/
+dist/
+fig/
+todo.md
+~$sample_team_data.xlsx
+~$template.xlsx
